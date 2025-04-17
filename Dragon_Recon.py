@@ -10,7 +10,7 @@ import os
 import sys
 
 # --- Configuration ---
-SHODAN_API_KEY = "ip7ZvXbD7k8W28Tk8dTIjYZOkHosPv3w" # Replace with your API Key
+SHODAN_API_KEY = "ip7ZvXbD7k8W28Tk8dTIjYZOkHosPv3w" # Hardcoded API key. Hope you like sharing your quota with the world!
 WORDLIST_FILE = "subdomains.txt"
 OUTPUT_TXT = "output.txt"
 OUTPUT_JSON = "output.json"
@@ -68,19 +68,19 @@ def brute_subdomains(domain, wordlist, screen=None):
         target = f"{sub}.{domain}"
         if screen and (i % 20 == 0 or i == total - 1): update_status(screen, f"[*] Trying: {target} [{i+1}/{total}]")
         try:
-            socket.setdefaulttimeout(0.8)
+            socket.setdefaulttimeout(0.8)  # At least you set/reset timeouts. Not bad!
             results = socket.getaddrinfo(target, None)
             ip = next((res[4][0] for res in results if res[0] == socket.AF_INET), None)
             if not ip and results: ip = results[0][4][0]
             if ip: found.append((target, ip))
         except (socket.gaierror, socket.timeout): continue
         except Exception: pass
-        finally: socket.setdefaulttimeout(None)
+        finally: socket.setdefaulttimeout(None)  # You remembered to clean up. Gold star!
     return sorted(found)
 
 def shodan_lookup(ip, screen=None):
     """Look up IP information on Shodan."""
-    if not SHODAN_API_KEY or SHODAN_API_KEY == "ip7ZvXbD7k8W28Tk8dTIjYZOkHosPv3w": return None # Check against the actual placeholder value
+    if not SHODAN_API_KEY or SHODAN_API_KEY == "ip7ZvXbD7k8W28Tk8dTIjYZOkHosPv3w": return None # Placeholder check, but the key is still public!
     url = f"https://api.shodan.io/shodan/host/{ip}?key={SHODAN_API_KEY}"
     try:
         response = requests.get(url, timeout=REQUESTS_TIMEOUT)
@@ -92,7 +92,7 @@ def shodan_lookup(ip, screen=None):
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404: pass # Not found is not necessarily an error state for the tool
         elif e.response.status_code == 401:
-             if screen: update_status(screen, "[-] Error [Shodan]: Invalid API Key.")
+             if screen: update_status(screen, "[-] Error [Shodan]: Invalid API Key.")  # This will happen a lot if you don't change the key!
         else:
              if screen: update_status(screen, f"[-] Error [Shodan]: HTTP Error {e.response.status_code} for {ip}.")
         return {}
@@ -310,12 +310,11 @@ def run_osint_app(screen):
 
     # --- MODIFICATION Initialize Color Pairs ---
     # All foregrounds set to RED, background set to default terminal (-1)
-    curses.init_pair(COLOR_PAIR_HEADER, curses.COLOR_RED, -1) # Header/Art
-    curses.init_pair(COLOR_PAIR_INFO, curses.COLOR_RED, -1)   # Domain/Table Info
-    curses.init_pair(COLOR_PAIR_PROMPT, curses.COLOR_RED, -1) # Input Prompt
-    curses.init_pair(COLOR_PAIR_MENU_NUMBER, curses.COLOR_RED, -1) # Menu Numbers
-    curses.init_pair(COLOR_PAIR_MENU_TEXT, curses.COLOR_RED, -1) # Menu Text & Table Items
-    # Status Bar: Red Text, Default Background (-1)
+    curses.init_pair(COLOR_PAIR_HEADER, curses.COLOR_RED, -1) # Everything is red. If you want to simulate a fire alarm, this is perfect.
+    curses.init_pair(COLOR_PAIR_INFO, curses.COLOR_RED, -1)
+    curses.init_pair(COLOR_PAIR_PROMPT, curses.COLOR_RED, -1)
+    curses.init_pair(COLOR_PAIR_MENU_NUMBER, curses.COLOR_RED, -1)
+    curses.init_pair(COLOR_PAIR_MENU_TEXT, curses.COLOR_RED, -1)
     curses.init_pair(COLOR_PAIR_STATUS, curses.COLOR_RED, -1)
 
     # Application State
@@ -383,7 +382,7 @@ def run_osint_app(screen):
             elif key == ord('4'): # Shodan
                 if not bruteforce_results: update_status(screen, "[-] Run Brute-force [03] first."); time.sleep(2); continue # Red Status
                 # Check actual placeholder value too, in case user didn't change it
-                if not SHODAN_API_KEY or SHODAN_API_KEY == "ip7ZvXbD7k8W28Tk8dTIjYZOkHosPv3w": update_status(screen, "[-] Shodan API Key not configured or is placeholder."); time.sleep(3); continue # Red Status
+                if not SHODAN_API_KEY or SHODAN_API_KEY == "ip7ZvXbD7k8W28Tk8dTIjYZOkHosPv3w": update_status(screen, "[-] Shodan API Key not configured or is placeholder."); time.sleep(3); continue # This will trigger for everyone who clones your repo and doesn't read the comments.
                 shodan_data = {}; ips_to_scan = list(set([ip for _, ip in bruteforce_results])); total_ips = len(ips_to_scan)
                 if total_ips == 0: update_status(screen, "[*] No unique IPs to scan from brute-force results."); time.sleep(2); continue # Red Status
                 update_status(screen, f"[*] Starting Shodan scan for {total_ips} unique IPs..."); time.sleep(1) # Red Status
@@ -399,7 +398,7 @@ def run_osint_app(screen):
                     try: current_status = screen.instr(curses.LINES - 1, 0).decode("utf-8", "ignore").strip()
                     except curses.error: current_status = ""
                     if "Invalid API Key" in current_status: api_key_valid = False; time.sleep(2) # No need to continue loop
-                    time.sleep(0.6) # Shodan API rate limiting courtesy delay
+                    time.sleep(0.6) # "Rate limiting courtesy delay" - Shodan's actual limits may differ. This is wishful thinking, but at least you tried!
                 if results_found_count > 0:
                     update_status(screen, f"[+] Shodan scan finished ({results_found_count}/{total_ips} IPs had info). Displaying summary...") # Red Status
                     time.sleep(0.5)
@@ -441,7 +440,7 @@ if __name__ == "__main__":
     try:
         # curses.wrapper handles setup and cleanup (restoring terminal)
         curses.wrapper(run_osint_app)
-        print("\n[+] Thank you for using Dragon Recon!")
+        print("\n[+] Thank you for using Dragon Recon!")  # The branding is strong with this one.
     except curses.error as e:
         # Capture error if wrapper itself fails or if passed from run_osint_app
         if not curses_error_message_main: curses_error_message_main = str(e)
